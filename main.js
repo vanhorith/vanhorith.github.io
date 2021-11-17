@@ -8,8 +8,10 @@ const gaussianFilter = [
 	1/16, 1/8, 1/16,
 ];
 
-let W = window.innerWidth;
-let H = window.innerHeight;
+// let W = window.innerWidth;
+// let H = window.innerHeight;
+let W = 1000;
+let H = 1000;
 let img;
 const agents = [];
 let trail;
