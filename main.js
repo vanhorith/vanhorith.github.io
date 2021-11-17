@@ -1,5 +1,6 @@
 // “Characteristics of pattern formation and evolution in approximations of Physarum transport networks.”
-// https://uwe-repository.worktribe.com/output/980579
+// Research: https://uwe-repository.worktribe.com/output/980579
+// Converted from: https://johanneshoff.com/physarum/
 
 // Gaussian kernel for diffusion of each trail
 const gaussianFilter = [
@@ -20,7 +21,7 @@ let paused = false;
 
 // dat.GUI
 let agentsSettings = function(){
-	this.numAgents    = 4000;           // Number of agents
+	this.numAgents    = 3000;           // Number of agents
 
     this.sensorOffset = 10;             // Sensor offset distance
 	this.sensorAngle  = 40/180*Math.PI; // Sensor angle from forward position in radians
@@ -35,12 +36,14 @@ let agentsSettings = function(){
 	this.gParticle    = 255;            // Green channel (Particle)
 	this.bParticle    = 255;            // Blue channel (Particle)
 
-	this.rBackground  = 0;              // Red channel (background/trail)
-	this.gBackground  = 0;              // Green channel (background/trail)
-	this.bBackground  = 0;              // Blue channel (background/trail)
+	this.rBackground  = 1;              // Red channel (background/trail)
+	this.gBackground  = 1;              // Green channel (background/trail)
+	this.bBackground  = 1;              // Blue channel (background/trail)
 
 	this.startCenter  = false;          // Starts each agent in the center of the screen
+	this.startCircle  = false;			// Statrts each agent in a circle
 	this.pause        = false;          // Pause the main loop
+	
 }//Agents()
 let settings = new agentsSettings();
 
@@ -63,7 +66,7 @@ function setup(){
 	f1.open();
 
 	var f2 = gui.addFolder('Speed Actions');
-	f2.add(settings, 'turnSpeed'   , 0.1, PI   );
+	f2.add(settings, 'turnSpeed'   , 0.1, PI/3   );
 	f2.add(settings, 'speed'       , 0  , 15   );
 	f2.open();
 
@@ -85,6 +88,7 @@ function setup(){
 	f5.open();
 
 	gui.add(settings, 'startCenter');
+	gui.add(settings, 'startCircle');
 	gui.add(settings, 'pause').onChange(function() { pause(); });
 
 	let obj = { reset: function () { reset(); } }
@@ -166,20 +170,31 @@ function regenerate(){
 
 	if(settings.startCenter){
 		for(let i = 0; i < settings.numAgents; ++i){
-			const vectorHeading = 2 * Math.PI*i/settings.numAgents;
 			agents.push({
 				x: W/2,
 				y: H/2,
-				randHeading: vectorHeading - Math.PI / 2,
+				randHeading: 2 * Math.PI * Math.random(),
 			});
 		}//for
-	} //if
-	else{
+	}//if
+	if(settings.startCircle){
+		const radius = Math.max(W, H) * 0.2;
+		for(let i = 0; i < settings.numAgents; ++i){
+			const theta = 2 * Math.PI * Math.random();
+			const r = radius * Math.sqrt(Math.random());
+			agents.push({
+				x: r * Math.cos(theta) + W/2,
+				y: r * Math.sin(theta) + H/2,
+				randHeading: 2 * Math.PI * Math.random(),
+			});
+		}//for
+	}//elif
+	if(!settings.startCenter && !settings.startCircle){
 		for(let i = 0; i < settings.numAgents; ++i){
 			agents.push({
 				x: Math.random() * W,
 				y: Math.random() * H,
-				randHeading: Math.random() * 2 * Math.PI,
+				randHeading: 2 * Math.PI * Math.random(),
 			});
 		}//for
 	}//else
@@ -206,19 +221,17 @@ function pause(){
 
 
 function render(){
-	const width = canvas.width;
-	const height = canvas.height;
 	img.loadPixels();
 	
 	let i = 0;
-	for(let y = 0; y < width; ++y){
-		for(let x = 0; x < height; ++x){
+	for(let y = 0; y < W-1; ++y){
+		for(let x = 0; x < H-1; ++x){
 			const trailBuffer = trail[i];
-			const curbrightness = Math.floor(trailBuffer * 200);
+			const curbrightness = Math.floor(trailBuffer * 1000);
 			img.pixels[i*4+0] = curbrightness + settings.rBackground;
-			img.pixels[i*4+1] = curbrightness + settings.gBackground;
-			img.pixels[i*4+2] = curbrightness + settings.bBackground;
-			img.pixels[i*4+3] = 100;
+			img.pixels[i*4+1] = curbrightness + settings.gBackground; // +100
+			img.pixels[i*4+2] = curbrightness + settings.bBackground; // +200
+			img.pixels[i*4+3] = 255;
 	
 			i++;
 		}//for
@@ -232,7 +245,6 @@ function render(){
 
 
 function draw(){
-	// background(0);
 	imageMode(CENTER);
 
 	if(shouldRegenerate)
@@ -241,7 +253,6 @@ function draw(){
 	trail = compute(agents, trail, W, H);
 
 	render();
-	// img.fill(0, 255, 255);
 	image(img, W/2, H/2, W, H);
 }//draw()
 
