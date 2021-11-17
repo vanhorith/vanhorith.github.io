@@ -8,10 +8,9 @@ const gaussianFilter = [
 	1/16, 1/8, 1/16,
 ];
 
-// let W = window.innerWidth;
-// let H = window.innerHeight;
-let W = 1000;
-let H = 1000;
+let W = window.innerWidth;
+let H = window.innerHeight;
+
 let img;
 const agents = [];
 let trail;
@@ -138,8 +137,8 @@ function compute(agents, trail, width, height){
 	}//for
 
 	let decayingTrail = Float32Array.from(trail);
-	for(let y = 1; y < H-1/2; ++y){
-		for(let x = 1; x < W-1/2; ++x){
+	for(let y = 1; y < H-1; ++y){
+		for(let x = 1; x < W-1; ++x){
 			const diffused = (
 				decayingTrail[index(x-1, y-1)] * gaussianFilter[0] +
 				decayingTrail[index(x  , y-1)] * gaussianFilter[1] +
